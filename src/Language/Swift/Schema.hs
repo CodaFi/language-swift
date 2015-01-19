@@ -17,13 +17,13 @@ data Type
     deriving Eq
     
 instance Show Type where
-    show (Array t)                          = "[" ++ (show t) ++ "]"
-    show (Dictionary k v)                   = "[" ++ (show k) ++ ":" ++ (show v) ++ "]" 
-    show (Optional t)                       = (show t) ++ "?"
-    show (ImplicitlyUnwrappedOptional t)    = (show t) ++ "!"
+    show (Array t)                          = "[" ++ show t ++ "]"
+    show (Dictionary k v)                   = "[" ++ show k ++ ":" ++ show v ++ "]" 
+    show (Optional t)                       = show t ++ "?"
+    show (ImplicitlyUnwrappedOptional t)    = show t ++ "!"
     show ProtocolType                       = "Protocol"
     show Metatype                           = "Metatype"
-    show (UserType n params)                = n ++ "<" ++ concat (intersperse ", " $ map show params) ++ ">"
+    show (UserType n params)                = n ++ "<" ++ intercalate ", " $ map show params ++ ">"
 
 newtype TypeParam = TypeParam String
     deriving Eq
@@ -71,6 +71,7 @@ data Declaration
     | Enum
         { accessLevel :: AccessLevelModifier
         , declName :: String                -- enum identifier
+        , declParams :: [TypeParam]         -- type parameters for generics
         --, enumConstants :: [Constant]       -- one or more constant values
         }
     | Protocol
