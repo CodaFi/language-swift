@@ -1,7 +1,6 @@
 module Language.Swift.Parser where
 
-import Data.List
-import Data.Function
+import Data.Maybe (fromMaybe)
 
 import Control.Applicative
 import Control.Monad.Reader
@@ -52,7 +51,7 @@ declaration = try structDeclaration
          -- <|> try variableDeclaration
           <|> try typealiasDeclaration
           <|> try functionDeclaration
-         -- <|> try enumDeclaration
+          <|> try enumDeclaration
          -- <|> try classDeclaration
          -- <|> try protocolDeclaration
          -- <|> try initializerDeclaration
@@ -62,15 +61,25 @@ declaration = try structDeclaration
 parameters :: Parser [TypeParam]
 parameters = option [] (angles $ commaSep1 $ TypeParam <$> identifier) <?> "type parameters"
 
+caseDeclaration :: Parser EnumCase
+caseDeclaration = EnumCase <$> (keyword "case" *> identifier) <*> associatedValues 
+    where
+        associatedValues = option [] (parens $ commaSep1 $ (,) <$> (try (parserReturn Nothing <*> typeDeclaration) <|> try (optional identifier <*> typeDeclaration))) <?> "type parameters"
+
 typeDeclaration :: Parser Type
 typeDeclaration = try userTypeDeclaration
               <|> try dictionaryTypeDeclaration
               <|> try arrayTypeDeclaration
+              <|> try tupleTypeDeclaration
         where
             arrayTypeDeclaration = do 
                 t <- brackets typeDeclaration
                 optionals <- many (string "?" <|> string "!")
                 pure (resolveOptionals optionals $ Array t) <* optional semi <* optional whiteSpace
+            tupleTypeDeclaration = do
+                t <- option [] (parens $ commaSep1 $ (,) <$> optional identifier <*> typeDeclaration) <?> "type parameters"
+                optionals <- many (string "?" <|> string "!")
+                pure (resolveOptionals optionals $ Tuple t) <* optional semi <* optional whiteSpace
             dictionaryTypeDeclaration = do
                 (k, v) <- (,) <$> (string "[" *> typeDeclaration <* colon) <*> (typeDeclaration <* string "]")
                 optionals <- many (string "?" <|> string "!")
@@ -108,6 +117,11 @@ constantDeclaration = Constant <$> accessLevelModifier <*> (keyword "let" *> ide
     
 typealiasDeclaration :: Parser Declaration
 typealiasDeclaration = TypeAlias <$> accessLevelModifier <*> (keyword "typealias" *> identifier <* equal) <*> typeDeclaration
+
+enumDeclaration :: Parser Declaration
+enumDeclaration = Enum <$> accessLevelModifier <*> (keyword "enum" *> identifier <?> "enum definition") <*> parameters <*> cases <* optional whiteSpace
+        where
+            cases = braces $ many caseDeclaration
 
 functionDeclaration :: Parser Declaration
 functionDeclaration = Function <$> accessLevelModifier <*> (keyword "func" *> identifier) <*> parameters <*> sig
