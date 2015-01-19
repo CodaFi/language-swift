@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Language.Swift.Parser where
 
 import Data.List
@@ -18,13 +17,11 @@ import Language.Swift.Schema
 
 type Symbols = [Declaration]
 
--- parser environment, immutable but contextual
-data Environment =
-    Environment
-        { currentNamespaces :: [Namespace]  -- namespace(s) in current context
-        , currentParams :: [TypeParam]      -- type parameter(s) for current type (struct or alias)
-        , currentFile :: FilePath           -- path of the current file
-        }
+data Environment = Environment
+    { currentNamespaces :: [Namespace]  -- namespace(s) in current context
+    , currentParams :: [TypeParam]      -- type parameter(s) for current type (struct or alias)
+    , currentFile :: FilePath           -- path of the current file
+    }
 
 newEnvironment :: FilePath -> Environment
 newEnvironment = Environment [] []
@@ -50,29 +47,25 @@ swift = do
     Swift [] <$> many declaration <* eof
 
 declaration :: Parser Declaration
-declaration = do
-    decl <- try structDeclaration
-        <|> try constantDeclaration
-        -- <|> try variableDeclaration
-        <|> try typealiasDeclaration
-        <|> try functionDeclaration
-        -- <|> try enumDeclaration
-        -- <|> try classDeclaration
-        -- <|> try protocolDeclaration
-        -- <|> try initializerDeclaration
-        -- <|> try deinitializeDeclaration
-        -- <|> try extensionDeclaration
-
-    return decl
+declaration = try structDeclaration
+          <|> try constantDeclaration
+         -- <|> try variableDeclaration
+          <|> try typealiasDeclaration
+          <|> try functionDeclaration
+         -- <|> try enumDeclaration
+         -- <|> try classDeclaration
+         -- <|> try protocolDeclaration
+         -- <|> try initializerDeclaration
+         -- <|> try deinitializeDeclaration
+         -- <|> try extensionDeclaration
 
 parameters :: Parser [TypeParam]
 parameters = option [] (angles $ commaSep1 $ TypeParam <$> identifier) <?> "type parameters"
 
 typeDeclaration :: Parser Type
-typeDeclaration = do
-          try userTypeDeclaration
-      <|> try dictionaryTypeDeclaration
-      <|> try arrayTypeDeclaration
+typeDeclaration = try userTypeDeclaration
+              <|> try dictionaryTypeDeclaration
+              <|> try arrayTypeDeclaration
         where
             arrayTypeDeclaration = do 
                 t <- brackets typeDeclaration
@@ -95,7 +88,7 @@ typeDeclaration = do
                                             _   -> t
 
 accessLevelModifier :: Parser AccessLevelModifier
-accessLevelModifier = maybe Internal id <$> optional (keyword "public" *> pure Public
+accessLevelModifier = fromMaybe Internal <$> optional (keyword "public" *> pure Public
                                                   <|> keyword "private" *> pure Private
                                                   <|> keyword "internal" *> pure Internal)
 
