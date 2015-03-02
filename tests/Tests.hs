@@ -1,10 +1,9 @@
 module Main where
 
 import Test.Framework (defaultMain)
-
-import qualified Language.Swift.Tests
+import Language.Swift.Tests (tests)
 
 main :: IO ()
 main = defaultMain
-    [ Language.Swift.Tests.tests 
+    [ tests 
     ]

@@ -18,6 +18,10 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:      Language.Swift
+                        Language.Swift.Parser
+                        Language.Swift.Schema
+                        Language.Swift.Lexer
+                        Language.Swift.Util
   -- other-modules:       
   -- other-extensions:    
   
@@ -37,7 +41,12 @@ test-suite doctests
   ghc-options:          -Wall -threaded
   hs-source-dirs:       tests
   build-depends:        base,
+                        directory,
+                        filepath,
+                        HUnit,
+                        language-swift,
                         test-framework >= 0.8 && < 0.9,
+                        test-framework-hunit,
                         test-framework-quickcheck2 >= 0.3 && < 0.4,
                         QuickCheck >= 2.5 && < 2.8
 
