@@ -12,10 +12,10 @@ swiftIdl = P.LanguageDef
     , P.commentEnd      = "*/"
     , P.commentLine     = "//"
     , P.nestedComments  = True
-    , P.identStart      = letter <|> char '_'
-    , P.identLetter     = alphaNum <|> char '_'
-    , P.opStart         = mzero
-    , P.opLetter        = mzero
+    , P.identStart      = letter <|> oneOf "#$&*+-./:<=>?^~_"
+    , P.identLetter     = alphaNum <|> oneOf "#$&*+-./:<=>?^~_"
+    , P.opStart         = P.identStart swiftIdl
+    , P.opLetter        = P.identStart swiftIdl
     , P.reservedNames   = 
             [ "class" 
             , "deinit"
@@ -63,7 +63,7 @@ swiftIdl = P.LanguageDef
             , "__FILE__"
             , "__FUNCTION__"
             ]
-    , P.reservedOpNames = []
+    , P.reservedOpNames = ["=", ".", "->"]
     , P.caseSensitive   = True
     }
 
@@ -92,6 +92,9 @@ semiEnd p   = endBy p semi
 commaEnd p  = endBy p comma
 commaEnd1 p = endBy1 p comma
 
+reserved = P.reserved lexer
+reservedOp = P.reservedOp lexer
+
 semiOrComma = semi <|> comma
 
 semiOrCommaSep p     = sepBy p semiOrComma
@@ -99,6 +102,8 @@ semiOrCommaSep1 p    = sepBy1 p semiOrComma
 semiOrCommaEnd p     = endBy p semiOrComma
 semiOrCommaSepEnd p  = sepEndBy p semiOrComma
 semiOrCommaSepEnd1 p = sepEndBy1 p semiOrComma
+
+arrowSep1 p = sepBy1 p $ reservedOp "->"
 
 quote = symbol "\""
 quotes = between quote quote

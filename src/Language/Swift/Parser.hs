@@ -69,7 +69,8 @@ caseDeclaration = EnumCase <$> (keyword "case" *> identifier) <*> associatedValu
           <|> try ((,) <$> parserReturn Nothing <*> typeDeclaration)
 
 typeDeclaration :: Parser Type
-typeDeclaration = try userTypeDeclaration
+typeDeclaration = try parenArrowTypeDeclaration
+              <|> try userTypeDeclaration
               <|> try dictionaryTypeDeclaration
               <|> try arrayTypeDeclaration
               <|> try tupleTypeDeclaration
@@ -93,8 +94,18 @@ typeDeclaration = try userTypeDeclaration
                 name <- identifier
                 params <- parameters
                 optionals <- many (string "?" <|> string "!")
-                pure (resolveOptionals optionals $ UserType name params) <* optional semi <* optional whiteSpace <?> "type declaration"
-                
+                pure (resolveOptionals optionals $ UserType name params) <* optional semi <?> "type declaration"
+            arrowTypeDeclaration = do
+                let td = try userTypeDeclaration
+                     <|> try dictionaryTypeDeclaration
+                     <|> try arrayTypeDeclaration
+                     <|> try tupleTypeDeclaration
+                t1 <- td <* (string "->" <* whiteSpace)
+                t2 <- typeDeclaration
+                optionals <- many (string "?" <|> string "!")
+                (pure $ resolveOptionals optionals $ Arrow [t1, t2]) <* optional semi <* optional whiteSpace
+            parenArrowTypeDeclaration = arrowTypeDeclaration <|> parens arrowTypeDeclaration
+            
             resolveOptionals [] t = t
             resolveOptionals (x:xs) t = case x of
                                             "?" -> resolveOptionals xs (Optional t)
@@ -109,7 +120,7 @@ accessLevelModifier = fromMaybe Internal <$> optional (keyword "public" *> pure 
 structDeclaration :: Parser Declaration
 structDeclaration = do
     lvl <- accessLevelModifier
-    name <- keyword "struct" *> identifier <?> "struct defintiion"
+    name <- keyword "struct" *> identifier <?> "struct definition"
     params <- parameters
     namespaces <- asks currentNamespaces
     local (with params) $ Struct namespaces name params lvl <$> fields <* optional whiteSpace
@@ -133,8 +144,7 @@ functionDeclaration = Function <$> accessLevelModifier <*> (keyword "func" *> id
     where
         sig = concat <$> many (parens $ commaSep1 param) <?> "parameter clause"
             where
-                modifier = optional (keyword "let" *> pure Let
+                paramMod = optional (keyword "let" *> pure Let
                                  <|> keyword "inout" *> pure Inout
                                  <|> keyword "#" *> pure Hash)
-                param = FunctionParam <$> modifier <*> optional identifier <*> (identifier <|> string "_") <*> (colon *> typeDeclaration)
-
+                param = FunctionParam <$> paramMod <*> optional identifier <*> (identifier <|> string "_") <*> (colon *> typeDeclaration)

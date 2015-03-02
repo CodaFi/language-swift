@@ -15,9 +15,11 @@ data Type
     | ProtocolType
     | Metatype
     | UserType String [TypeParam]
+    | Arrow [Type]
     deriving Eq
     
 instance Show Type where
+    show (Arrow ts)                         =  intercalate " -> " (map show ts)
     show (Tuple ts)                         = "(" ++ intercalate ", " (map showParam ts) ++ ")"
         where
             showParam (mName, t) = maybe "" (++ " : ") mName ++ show t
@@ -48,7 +50,7 @@ instance Show EnumCase where
         where
             showParam (mName, t) = maybe "" (++ " : ") mName ++ show t
 
-data ParameterModifier = Let | Inout | Hash
+data ParameterModifier = Let | Var | Inout | Hash
     deriving Eq
 
 data FunctionParam = FunctionParam
