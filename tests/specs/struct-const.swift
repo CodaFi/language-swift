@@ -6,10 +6,10 @@ struct Test {
     let testTuple : (s : String, [Int], UInt)
     let arrowTest : ((String -> Bool -> String) -> Void)
 
-    /*
+    
     func testFunc<A>(x : String) -> Void {
     }
-    */
+    
 }
 
 enum TestEnum<T> {

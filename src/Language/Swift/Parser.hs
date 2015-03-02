@@ -61,13 +61,6 @@ declaration = try structDeclaration
 parameters :: Parser [TypeParam]
 parameters = option [] (angles $ commaSep1 $ TypeParam <$> identifier) <?> "type parameters"
 
-caseDeclaration :: Parser EnumCase
-caseDeclaration = EnumCase <$> (keyword "case" *> identifier) <*> associatedValues 
-    where
-        associatedValues = option [] (parens $ commaSep1 opt) <?> "type parameters"
-        opt = try ((,) <$> (Just <$> identifier) <*> (colon *> typeDeclaration))
-          <|> try ((,) <$> parserReturn Nothing <*> typeDeclaration)
-
 typeDeclaration :: Parser Type
 typeDeclaration = try parenArrowTypeDeclaration
               <|> try userTypeDeclaration
@@ -139,12 +132,27 @@ enumDeclaration = Enum <$> accessLevelModifier <*> (keyword "enum" *> identifier
         where
             cases = braces $ many caseDeclaration
 
+caseDeclaration :: Parser EnumCase
+caseDeclaration = EnumCase <$> (keyword "case" *> identifier) <*> associatedValues 
+    where
+        associatedValues = option [] (parens $ commaSep1 opt) <?> "type parameters"
+        opt = try ((,) <$> (Just <$> identifier) <*> (colon *> typeDeclaration))
+          <|> try ((,) <$> parserReturn Nothing <*> typeDeclaration)
+              
 functionDeclaration :: Parser Declaration
-functionDeclaration = Function <$> accessLevelModifier <*> (keyword "func" *> identifier) <*> parameters <*> sig
+functionDeclaration = do
+  lvl <- accessLevelModifier
+  ident <- (keyword "func" *> identifier)
+  params <- parameters
+  signat <- sig
+  returnTy <- fromMaybe (Tuple []) <$> optional ((string "->") *> optional whiteSpace *> typeDeclaration)
+  decls <- braces $ many declaration
+  pure $ Function lvl ident params signat returnTy decls
     where
         sig = concat <$> many (parens $ commaSep1 param) <?> "parameter clause"
             where
                 paramMod = optional (keyword "let" *> pure Let
                                  <|> keyword "inout" *> pure Inout
                                  <|> keyword "#" *> pure Hash)
-                param = FunctionParam <$> paramMod <*> optional identifier <*> (identifier <|> string "_") <*> (colon *> typeDeclaration)
+                param = try (FunctionParam <$> paramMod <*> optional identifier <*> (identifier <|> string "_") <*> (colon *> typeDeclaration))
+                    <|> try (FunctionParam <$> paramMod <*> parserReturn Nothing <*> (identifier <|> string "_") <*> (colon *> typeDeclaration))

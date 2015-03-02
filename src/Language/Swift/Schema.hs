@@ -60,6 +60,9 @@ data FunctionParam = FunctionParam
     , paramType :: Type
     } deriving Eq
 
+instance Show FunctionParam where
+  show (FunctionParam _ extern local ty) = (maybe "" (++ " ") extern) ++ local ++ " : " ++ show ty
+
 data Attribute = Attribute
     { attrName :: QualifiedName
     , attrValue :: String
@@ -74,6 +77,8 @@ data Declaration
         , declName :: String
         , declParams :: [TypeParam]
         , signature :: [FunctionParam]
+        , returnType :: Type
+        , bodyDeclarations :: [Declaration]     -- zero or more fields
         }
     | Constant
         { accessLevel :: AccessLevelModifier
@@ -115,7 +120,7 @@ showTypeParams :: [TypeParam] -> String
 showTypeParams = angles . sepBy ", " show
 
 instance Show Declaration where
-    show Function {..} = "func " ++ declName
+    show Function {..} = "func " ++ declName ++ "(" ++ intercalate ", " (map show signature) ++ ")" ++ " -> " ++ show returnType
     show Constant {..} = "let " ++ declName ++ " : " ++ show constType
     show Struct {..} = "struct " ++ declName ++ showTypeParams declParams ++ "{ " ++ show structFields ++ " }"
     show Enum {..} = "enum " ++ declName ++ "{" ++ show enumCases ++ "}"
