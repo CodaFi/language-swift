@@ -27,7 +27,10 @@ instance Show Type where
     show (ImplicitlyUnwrappedOptional t)    = show t ++ "!"
     show ProtocolType                       = "Protocol"
     show Metatype                           = "Metatype"
-    show (UserType n params)                = n ++ "<" ++ intercalate ", " (map show params) ++ ">"
+    show (UserType n params)                = n ++ showGenericParams params
+      where
+        showGenericParams [] = ""
+        showGenericParams ps = ("<" ++ intercalate ", " (map show ps) ++ ">")
 
 newtype TypeParam = TypeParam String
     deriving Eq
