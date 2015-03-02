@@ -14,10 +14,10 @@ swiftIdl = P.LanguageDef
     , P.commentEnd      = "*/"
     , P.commentLine     = "//"
     , P.nestedComments  = True
-    , P.identStart      = letter <|> oneOf "#$&*+-./:<=>?^~_"
-    , P.identLetter     = alphaNum <|> oneOf "#$&*+-./:<=>?^~_"
-    , P.opStart         = P.identStart swiftIdl
-    , P.opLetter        = P.identStart swiftIdl
+    , P.identStart      = letter <|> oneOf "#$&*+-./:=?^~_"
+    , P.identLetter     = alphaNum <|> oneOf "#$&*+-./:=?^~_"
+    , P.opStart         = P.identStart swiftIdl <|> oneOf "<>"
+    , P.opLetter        = P.identStart swiftIdl <|> oneOf "<>"
     , P.reservedNames   = 
             [ "class" 
             , "deinit"

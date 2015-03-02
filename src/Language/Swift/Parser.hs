@@ -85,7 +85,7 @@ typeDeclaration = try parenArrowTypeDeclaration
                 pure (resolveOptionals optionals $ Dictionary k v) <* optional semi <* optional whiteSpace
             userTypeDeclaration = do
                 name <- identifier
-                params <- parameters
+                params <- option [] (angles $ commaSep1 typeDeclaration) <?> "type parameters"
                 optionals <- many (string "?" <|> string "!")
                 pure (resolveOptionals optionals $ UserType name params) <* optional semi <?> "type declaration"
             arrowTypeDeclaration = do

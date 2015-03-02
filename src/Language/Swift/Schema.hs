@@ -14,7 +14,7 @@ data Type
     | Optional Type | ImplicitlyUnwrappedOptional Type
     | ProtocolType
     | Metatype
-    | UserType String [TypeParam]
+    | UserType String [Type]
     | Arrow [Type]
     deriving Eq
     
