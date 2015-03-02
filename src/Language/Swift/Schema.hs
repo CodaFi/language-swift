@@ -44,7 +44,7 @@ data EnumCase = EnumCase
     } deriving Eq
 
 instance Show EnumCase where
-    show (EnumCase nm ps) = "case " ++ nm ++ intercalate ", " (map showParam ps) 
+    show (EnumCase nm ps) = "case " ++ nm ++ "(" ++ intercalate ", " (map showParam ps) ++ ")"
         where
             showParam (mName, t) = maybe "" (++ " : ") mName ++ show t
 
@@ -58,7 +58,7 @@ data FunctionParam = FunctionParam
     , paramType :: Type
     } deriving Eq
 
-data Attribute = Attribute                                                                                                                      
+data Attribute = Attribute
     { attrName :: QualifiedName
     , attrValue :: String
     } deriving Eq

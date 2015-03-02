@@ -64,8 +64,9 @@ parameters = option [] (angles $ commaSep1 $ TypeParam <$> identifier) <?> "type
 caseDeclaration :: Parser EnumCase
 caseDeclaration = EnumCase <$> (keyword "case" *> identifier) <*> associatedValues 
     where
-        associatedValues = option [] (parens $ commaSep1 $ opt) <?> "type parameters"
-        opt = (,) <$> optionMaybe identifier <*> typeDeclaration
+        associatedValues = option [] (parens $ commaSep1 opt) <?> "type parameters"
+        opt = try ((,) <$> (Just <$> identifier) <*> (colon *> typeDeclaration))
+          <|> try ((,) <$> parserReturn Nothing <*> typeDeclaration)
 
 typeDeclaration :: Parser Type
 typeDeclaration = try userTypeDeclaration
@@ -78,7 +79,10 @@ typeDeclaration = try userTypeDeclaration
                 optionals <- many (string "?" <|> string "!")
                 pure (resolveOptionals optionals $ Array t) <* optional semi <* optional whiteSpace
             tupleTypeDeclaration = do
-                t <- option [] (parens $ commaSep1 $ (,) <$> optional identifier <*> typeDeclaration) <?> "type parameters"
+                let opt = try ((,) <$> (Just <$> identifier) <*> (colon *> typeDeclaration))
+                       <|> try ((,) <$> parserReturn Nothing <*> typeDeclaration)
+                          
+                t <- option [] (parens $ commaSep1 opt) <?> "type parameters"
                 optionals <- many (string "?" <|> string "!")
                 pure (resolveOptionals optionals $ Tuple t) <* optional semi <* optional whiteSpace
             dictionaryTypeDeclaration = do
