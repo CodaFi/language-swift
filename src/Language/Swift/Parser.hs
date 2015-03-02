@@ -64,7 +64,8 @@ parameters = option [] (angles $ commaSep1 $ TypeParam <$> identifier) <?> "type
 caseDeclaration :: Parser EnumCase
 caseDeclaration = EnumCase <$> (keyword "case" *> identifier) <*> associatedValues 
     where
-        associatedValues = option [] (parens $ commaSep1 $ (,) <$> (try (parserReturn Nothing <*> typeDeclaration) <|> try (optional identifier <*> typeDeclaration))) <?> "type parameters"
+        associatedValues = option [] (parens $ commaSep1 $ opt) <?> "type parameters"
+        opt = (,) <$> optionMaybe identifier <*> typeDeclaration
 
 typeDeclaration :: Parser Type
 typeDeclaration = try userTypeDeclaration
@@ -98,8 +99,8 @@ typeDeclaration = try userTypeDeclaration
 
 accessLevelModifier :: Parser AccessLevelModifier
 accessLevelModifier = fromMaybe Internal <$> optional (keyword "public" *> pure Public
-                                                  <|> keyword "private" *> pure Private
-                                                  <|> keyword "internal" *> pure Internal)
+                                                   <|> keyword "private" *> pure Private
+                                                   <|> keyword "internal" *> pure Internal)
 
 structDeclaration :: Parser Declaration
 structDeclaration = do
